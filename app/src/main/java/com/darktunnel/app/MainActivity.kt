@@ -18,11 +18,12 @@ class MainActivity : Activity() {
         setContentView(web)
         web.settings.javaScriptEnabled = true
         web.settings.domStorageEnabled = true
+        web.webChromeClient = WebChromeClient()
         web.addJavascriptInterface(Bridge(), "DT")
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(v: WebView, r: WebResourceRequest): Boolean {
                 try { startActivity(Intent(Intent.ACTION_VIEW, r.url)) } catch (e: ActivityNotFoundException) {}
-                return true // WhatsApp (wa.me) s'ouvre dans l'app
+                return true
             }
         }
         web.loadUrl("file:///android_asset/index.html")
