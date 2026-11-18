@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dark Tunnel</title>
+<style>
+:root{--bg:#05070f;--card:#0d1a38;--line:#1e3a8a;--txt:#fff;--mut:#8a9bc0;--ac:#2f6df0;--ac2:#22d3ee;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Roboto,sans-serif}
+.wrap{max-width:480px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:14px 16px;margin-bottom:12px}
+.top{display:flex;align-items:center;gap:10px;border-color:var(--ac2)}
+.top h1{margin:0;font-size:22px;flex:1}.top small{color:var(--ac2);font-size:12px;display:block}
+.ib{width:44px;height:44px;border-radius:50%;border:2px solid var(--ac2);background:#06102a;color:#fff;font-size:20px}
+.big{display:block;margin:22px auto;width:200px;height:200px;border-radius:50%;border:10px solid var(--ac2);background:radial-gradient(circle at 35% 30%,var(--ac),#1b3f9a);color:#fff;font-weight:700;font-size:20px}
+.big.on{border-color:#10b981}
+.st{text-align:center;font-size:28px;font-weight:700}.sub{text-align:center;color:var(--mut);margin:4px 0 14px}
+.row{display:flex;gap:8px}.row .card{flex:1;margin:0;padding:10px}
+.k{color:var(--mut);font-size:13px}.v{font-size:20px;font-weight:700}
+.btn{border:0;border-radius:30px;padding:14px;font-weight:700;color:#fff;background:var(--ac);font-size:16px;width:100%;margin-top:8px}
+.btn.g{background:#0f9d6e}.btn.o{background:none;border:2px solid var(--ac2);color:var(--ac2)}
+.mod{position:fixed;inset:0;background:#000b;display:none;align-items:center;padding:14px;overflow:auto;z-index:5}
+.mod.show{display:flex}.mod>.card{width:100%;max-width:460px;margin:auto;border-color:var(--ac2)}
+.idb{font-family:monospace;font-size:30px;color:#fbbf24;letter-spacing:2px;margin:6px 0}
+textarea,input,select{width:100%;background:#060c20;border:2px solid var(--line);border-radius:14px;color:#fff;padding:12px;font-size:15px;margin-top:8px}
+.item{display:flex;gap:14px;align-items:center;cursor:pointer}.item i{font-size:30px;font-style:normal}
+.item b{display:block}.item span{color:var(--mut);font-size:14px}
+.hide{display:none}.sw{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.sw button{width:56px;height:56px;border-radius:50%;border:3px solid #fff3}
+.bar{display:flex;align-items:center;gap:12px;margin-bottom:14px}.bar h2{margin:0}
+.code{word-break:break-all;font-family:monospace;color:#fbbf24;font-size:13px}
+.ok{color:#34d399}.ko{color:#f87171}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section id="home">
+  <div class="card top">
+    <div style="font-size:38px">🛡️</div>
+    <h1>DARK TUNNEL<small>Rapide • Sécurisé • Libre</small></h1>
+    <button class="ib" onclick="openCode()">+</button>
+    <button class="ib" onclick="go('settings')">⚙</button>
+  </div>
+  <button class="big" id="cbtn" onclick="toggle()">CONNECTER</button>
+  <div class="st" id="st">⚪ Déconnecté</div>
+  <div class="sub" id="sub">Appuie sur le bouton pour te connecter</div>
+  <div class="row">
+    <div class="card"><div class="k">⏱ Durée</div><div class="v" id="dur">00:00:00</div></div>
+    <div class="card"><div class="k">↑ Envoyé</div><div class="v" id="up">0,0 Ko</div></div>
+    <div class="card"><div class="k">↓ Reçu</div><div class="v" id="dn">0,0 Ko</div></div>
+  </div>
+  <div class="card"><div class="k">🔑 Abonnement</div><div class="v" id="lic">Aucun code actif</div></div>
+</section>
+
+<section id="settings" class="hide">
+  <div class="bar"><button class="ib" onclick="go('home')">←</button><h2>Paramètres</h2></div>
+  <div class="card item" onclick="wa('Bonjour, je voudrais vérifier les mises à jour de Dark Tunnel.')"><i>🔄</i><div><b>Update</b><span>Vérifier les mises à jour • contacter l’admin</span></div></div>
+  <div class="card item" onclick="copyId()"><i>🆔</i><div><b>Mon ID appareil</b><span id="sid"></span></div></div>
+  <div class="card item" onclick="go('abo')"><i>💳</i><div><b>Abonnement</b><span>Voir les tarifs et choisir une durée</span></div></div>
+  <div class="card item" onclick="wa('Bonjour, je suis intéressé par les lots de codes revendeur Dark Tunnel. Mon ID : '+ID)"><i>🤝</i><div><b>Revendeurs</b><span>Lots de codes à prix réduit</span></div></div>
+  <div class="card item" onclick="go('theme')"><i>🎨</i><div><b>Thème</b><span>Choisir la couleur de l’application</span></div></div>
+  <div class="card item" onclick="adminLogin()"><i>🔐</i><div><b>Réglage</b><span>Réservé à l’administrateur</span></div></div>
+</section>
+
+<section id="abo" class="hide">
+  <div class="bar"><button class="ib" onclick="go('settings')">←</button><h2>Abonnement</h2></div>
+  <div class="card item" onclick="sub('1 semaine','750')"><i>📅</i><div><b>1 semaine</b><span>750 FCFA</span></div></div>
+  <div class="card item" onclick="sub('2 semaines','1 500')"><i>📅</i><div><b>2 semaines</b><span>1 500 FCFA</span></div></div>
+  <div class="card item" onclick="sub('1 mois','3 000')"><i>📅</i><div><b>1 mois</b><span>3 000 FCFA</span></div></div>
+</section>
+
+<section id="theme" class="hide">
+  <div class="bar"><button class="ib" onclick="go('settings')">←</button><h2>Thème</h2></div>
+  <div class="card"><div class="sw" id="sw"></div></div>
+</section>
+
+<section id="admin" class="hide">
+  <div class="bar"><button class="ib" onclick="go('settings')">←</button><h2>Panel admin</h2></div>
+  <div class="card">
+    <div class="k">ID appareil du client</div>
+    <input id="aid" placeholder="ID-XXXXXXXX" autocapitalize="characters">
+    <select id="adur"><option value="7">1 semaine</option><option value="14">2 semaines</option><option value="30">1 mois</option></select>
+    <button class="btn g" onclick="gen()">Générer le code</button>
+    <div class="code" id="out" style="margin-top:12px"></div>
+    <button class="btn hide" id="cp" onclick="copyTxt(document.getElementById('out').textContent)">Copier le code</button>
+    <button class="btn o hide" id="sd" onclick="sendCode()">Envoyer par WhatsApp</button>
+  </div>
+  <div class="card"><div class="k">Codes générés</div><div id="hist" class="code"></div></div>
+</section>
+</div>
+
+<div class="mod" id="cm"><div class="card">
+  <h2 style="margin:0 0 10px">Saisir mon code</h2>
+  <div class="card" style="background:#060c20"><div class="k">Ton ID appareil (à donner à l’admin)</div>
+    <div class="idb" id="mid"></div>
+    <div class="row"><button class="btn" onclick="copyId()">Copier</button><button class="btn" onclick="wa('Bonjour, voici mon ID appareil Dark Tunnel : '+ID)">Envoyer à l’admin</button></div></div>
+  <textarea id="ci" rows="4" placeholder="Colle ici le code reçu (dark://…)"></textarea>
+  <div id="msg" style="margin-top:8px"></div>
+  <button class="btn g" onclick="validate()">Valider</button>
+  <button class="btn o" onclick="closeCode()">Annuler</button>
+</div></div>
+
+<script>
+const ADMIN_PHONE='22658030648';       // +226 58 03 06 48
+const ADMIN_PASS='dark2026';           // CHANGE CE MOT DE PASSE
+const SECRET='DT-SECRET-CHANGE-ME';    // CHANGE CETTE CLÉ
+const THEMES={Rouge:'#e11d48',Bleu:'#2f6df0',Rose:'#ec4899',Orange:'#f97316',Noir:'#374151',Vert:'#10b981',Violet:'#8b5cf6'};
+const S={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let ID=S.get('dt_id');
+if(!ID){ID='ID-'+Array.from(crypto.getRandomValues(new Uint8Array(4))).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();S.set('dt_id',ID)}
+const $=i=>document.getElementById(i);
+function go(v){['home','settings','abo','theme','admin'].forEach(s=>$(s).classList.toggle('hide',s!==v))}
+function wa(t){location.href='https://wa.me/'+ADMIN_PHONE+'?text='+encodeURIComponent(t)}
+function sub(d,p){wa('Bonjour, je souhaite un abonnement Dark Tunnel ('+d+' – '+p+' FCFA). Mon ID appareil : '+ID)}
+async function copyTxt(t){if(window.DT){DT.copy(t);alert('Copié ✅');return}try{await navigator.clipboard.writeText(t);alert('Copié ✅')}catch(e){prompt('Copie manuelle :',t)}}
+function copyId(){copyTxt(ID)}
+function openCode(){$('mid').textContent=ID;$('msg').textContent='';$('cm').classList.add('show')}
+function closeCode(){$('cm').classList.remove('show')}
+// ---- codes ----
+function hash(s){let h=5381;for(const c of s)h=((h<<5)+h+c.charCodeAt(0))>>>0;return h.toString(36).toUpperCase()}
+function makeCode(id,days){const ts=Date.now();const body=[id,days,ts].join('|');return 'dark://'+btoa(body+'|'+hash(body+SECRET))}
+function readCode(c){try{const p=atob(c.trim().replace(/^dark:\/\//i,'')).split('|');const body=p.slice(0,3).join('|');
+ if(hash(body+SECRET)!==p[3])return{err:'Code invalide'};if(p[0]!==ID)return{err:'Ce code est pour un autre appareil'};
+ const exp=+p[2]+ +p[1]*864e5;if(exp<Date.now())return{err:'Code expiré'};return{exp}}catch(e){return{err:'Code invalide'}}}
+function validate(){const r=readCode($('ci').value);const m=$('msg');
+ if(r.err){m.className='ko';m.textContent='❌ '+r.err;return}
+ S.set('dt_exp',r.exp);m.className='ok';m.textContent='✅ Code activé';refreshLic();setTimeout(closeCode,900)}
+function refreshLic(){const e=+S.get('dt_exp');const d=Math.ceil((e-Date.now())/864e5);
+ $('lic').textContent=e&&e>Date.now()?'Actif • '+d+' jour(s) restant(s)':'Aucun code actif'}
+// ---- admin ----
+function adminLogin(){const p=prompt('Mot de passe administrateur');if(p===null)return;if(p===ADMIN_PASS){go('admin');drawHist()}else alert('Accès refusé')}
+let last='';
+function gen(){const id=$('aid').value.trim().toUpperCase();if(!/^ID-[0-9A-F]{8}$/.test(id)){alert('ID invalide');return}
+ const d=+$('adur').value;last=makeCode(id,d);$('out').textContent=last;$('cp').classList.remove('hide');$('sd').classList.remove('hide');
+ const h=JSON.parse(S.get('dt_hist')||'[]');h.unshift(id+' • '+d+'j • '+new Date().toLocaleDateString('fr-FR'));S.set('dt_hist',JSON.stringify(h.slice(0,30)));drawHist()}
+function drawHist(){$('hist').innerHTML=(JSON.parse(S.get('dt_hist')||'[]')).join('<br>')||'—'}
+function sendCode(){location.href='https://wa.me/?text='+encodeURIComponent('Voici ton code Dark Tunnel :\n'+last)}
+// ---- VPN (simulation) ----
+let on=false,t0=0,tm;
+function toggle(){const e=+S.get('dt_exp');
+ if(!on&&!(e>Date.now())){alert('Aucun abonnement actif. Appuie sur + pour saisir ton code.');return}
+ on=!on;try{if(window.DT){on?DT.connect():DT.disconnect()}}catch(x){}$('cbtn').classList.toggle('on',on);$('cbtn').textContent=on?'DÉCONNECTER':'CONNECTER';
+ $('st').textContent=on?'🟢 Connecté':'⚪ Déconnecté';$('sub').textContent=on?'Dark Tunnel actif':'Appuie sur le bouton pour te connecter';
+ clearInterval(tm);if(on){t0=Date.now();let u=0,d=0;tm=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);
+  $('dur').textContent=[s/3600,s/60%60,s%60].map(x=>String(Math.floor(x)).padStart(2,'0')).join(':');
+  u+=Math.random()*3;d+=Math.random()*12;$('up').textContent=u.toFixed(1).replace('.',',')+' Ko';$('dn').textContent=d.toFixed(1).replace('.',',')+' Ko'},1000)}
+ else{$('dur').textContent='00:00:00'}}
+// ---- thème ----
+function setTheme(c){document.documentElement.style.setProperty('--ac',c);document.documentElement.style.setProperty('--ac2',c);document.documentElement.style.setProperty('--line',c+'88');S.set('dt_theme',c)}
+$('sw').innerHTML=Object.entries(THEMES).map(([n,c])=>`<div style="text-align:center"><button style="background:${c}" onclick="setTheme('${c}')"></button><div class="k">${n}</div></div>`).join('');
+if(S.get('dt_theme'))setTheme(S.get('dt_theme'));
+$('sid').textContent=ID+' • touche pour copier';refreshLic();
+</script>
+</body>
+</html>
