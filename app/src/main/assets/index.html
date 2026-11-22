@@ -66,6 +66,8 @@ select option{background:#0d1a38}
   <div class="card item" onclick="go('abo')"><i>💳</i><div><b>Abonnement</b><span>Voir les tarifs et choisir une durée</span></div></div>
   <div class="card item" onclick="wa('Bonjour, je suis intéressé par les lots de codes revendeur Light Tunnel. Mon ID : '+ID)"><i>🤝</i><div><b>Revendeurs</b><span>Lots de codes à prix réduit</span></div></div>
   <div class="card item" onclick="go('theme')"><i>🎨</i><div><b>Thème</b><span>Choisir la couleur de l’application</span></div></div>
+  <div class="card item" onclick="openDiag()"><i>🩺</i><div><b>Diagnostic</b><span>Trouver pourquoi la connexion ne marche pas</span></div></div>
+  <div class="card item" onclick="go('diag')"><i>🩺</i><div><b>Diagnostic</b><span>Repérer le problème de connexion</span></div></div>
   <div class="card item" onclick="openAdmin()"><i>🔐</i><div><b>Réglage</b><span>Réservé à l’administrateur</span></div></div>
 </section>
 
@@ -74,6 +76,14 @@ select option{background:#0d1a38}
   <div class="card item" onclick="sub('1 semaine','750')"><i>📅</i><div><b>1 semaine</b><span>750 FCFA</span></div></div>
   <div class="card item" onclick="sub('2 semaines','1 500')"><i>📅</i><div><b>2 semaines</b><span>1 500 FCFA</span></div></div>
   <div class="card item" onclick="sub('1 mois','3 000')"><i>📅</i><div><b>1 mois</b><span>3 000 FCFA</span></div></div>
+</section>
+
+<section id="diag" class="hide">
+  <div class="bar"><button class="ib" onclick="go('settings')">←</button><h2>Diagnostic</h2></div>
+  <div class="card"><div id="dres" class="k">Appuie sur « Lancer » pour tester la connexion.</div></div>
+  <button class="btn g" onclick="runDiag()">Lancer le diagnostic</button>
+  <button class="btn" onclick="copyTxt(lastRep)">Copier le rapport</button>
+  <button class="btn o" onclick="sendRep()">Envoyer le rapport à l’admin</button>
 </section>
 
 <section id="theme" class="hide">
@@ -92,6 +102,15 @@ select option{background:#0d1a38}
   <div id="msg" style="margin-top:8px"></div>
   <button class="btn g" onclick="validate()">Valider</button>
   <button class="btn o" onclick="closeCode()">Annuler</button>
+</div></div>
+
+<!-- Diagnostic -->
+<div class="mod" id="dm"><div class="card">
+  <h2 style="margin:0 0 6px">🩺 Diagnostic</h2>
+  <div id="dsum" style="font-weight:700;margin:8px 0"></div>
+  <div id="dres"></div>
+  <div class="row"><button class="btn" onclick="runDiag()">Relancer</button><button class="btn" onclick="copyTxt(lastReport)">Copier le rapport</button></div>
+  <button class="btn o" onclick="closeDiag()">Fermer</button>
 </div></div>
 
 <!-- Réglage admin -->
@@ -138,7 +157,7 @@ let ID=S.get('dt_id');
 if(!ID){ID='ID-'+Array.from(crypto.getRandomValues(new Uint8Array(4))).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();S.set('dt_id',ID)}
 const $=i=>document.getElementById(i);
 const enc=s=>btoa(unescape(encodeURIComponent(s))),dec=s=>decodeURIComponent(escape(atob(s)));
-function go(v){['home','settings','abo','theme'].forEach(s=>$(s).classList.toggle('hide',s!==v))}
+function go(v){['home','settings','abo','theme','diag'].forEach(s=>$(s).classList.toggle('hide',s!==v))}
 function wa(t){location.href='https://wa.me/'+ADMIN_PHONE+'?text='+encodeURIComponent(t)}
 function sub(d,p){wa('Bonjour, je souhaite un abonnement Light Tunnel ('+d+' – '+p+' FCFA). Mon ID appareil : '+ID)}
 async function copyTxt(t){if(!t)return;if(window.DT){DT.copy(t);alert('Copié ✅');return}try{await navigator.clipboard.writeText(t);alert('Copié ✅')}catch(e){prompt('Copie manuelle :',t)}}
@@ -186,19 +205,76 @@ function sendCode(){if(!last){alert('Génère d’abord un code');return}locatio
 let on=false,t0=0,tm;
 function toggle(){const e=+S.get('dt_exp');
  if(!on&&!(e>Date.now())){alert('Aucun abonnement actif. Appuie sur + pour saisir ton code.');return}
+ if(!on&&window.DT&&DT.hasEngine&&!DT.hasEngine()){alert('Moteur V2Ray absent : connexion réelle impossible avec cette version.\nParamètres → Diagnostic pour le détail.');return}
  on=!on;try{if(window.DT){on?DT.connect():DT.disconnect()}}catch(x){}
  $('cbtn').classList.toggle('on',on);$('cbtn').textContent=on?'DÉCONNECTER':'CONNECTER';
  $('st').textContent=on?'🟢 Connecté':'⚪ Déconnecté';$('sub').textContent=on?'Light Tunnel actif':'Appuie sur le bouton pour te connecter';
- clearInterval(tm);if(on){t0=Date.now();let u=0,d=0;tm=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);
+ clearInterval(tm);if(on)setTimeout(checkReal,1500);if(on){t0=Date.now();let u=0,d=0;tm=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);
   $('dur').textContent=[s/3600,s/60%60,s%60].map(x=>String(Math.floor(x)).padStart(2,'0')).join(':');
-  u+=Math.random()*3;d+=Math.random()*12;$('up').textContent=u.toFixed(1).replace('.',',')+' Ko';$('dn').textContent=d.toFixed(1).replace('.',',')+' Ko'},1000)}
+  if(realTunnel()){u+=Math.random()*3;d+=Math.random()*12}$('up').textContent=u.toFixed(1).replace('.',',')+' Ko';$('dn').textContent=d.toFixed(1).replace('.',',')+' Ko'},1000)}
  else{$('dur').textContent='00:00:00'}}
 
-// ---- thème ----
-function setTheme(c){const r=document.documentElement.style;r.setProperty('--ac',c);r.setProperty('--ac2',c);r.setProperty('--line',c+'88');S.set('dt_theme',c)}
-$('sw').innerHTML=Object.entries(THEMES).map(([n,c])=>`<div style="text-align:center"><button style="background:${c}" onclick="setTheme('${c}')"></button><div class="k">${n}</div></div>`).join('');
-if(S.get('dt_theme'))setTheme(S.get('dt_theme'));
-$('sid').textContent=ID+' • touche pour copier';refreshLic();
-</script>
-</body>
-</html>
+// ---- diagnostic ----
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function protoOf(c){c=(c||'').trim();if(!c)return '';if(/\[Interface\]/i.test(c))return 'WireGuard';const m=c.match(/^\s*([a-z0-9]+):\/\//im);return m?m[1].toUpperCase():'inconnu'}
+let lastReport='';
+function openDiag(){$('dm').classList.add('show');runDiag()}
+function closeDiag(){$('dm').classList.remove('show')}
+function runDiag(){const e=+S.get('dt_exp'),cfg=S.get('dt_cfg')||'',lic=e>Date.now();
+ window._rows=[['Abonnement / code',lic,lic?'actif':'aucun code actif : appuie sur + pour en saisir un'],
+  ['Config serveur dans le code',!!cfg,cfg?('protocole '+protoOf(cfg)):'le code ne contient pas de serveur']];
+ $('dres').textContent='⏳ Test en cours…';$('dsum').textContent='';
+ if(window.DT){try{DT.diag(cfg)}catch(x){onDiag('[]')}}else onDiag('[]')}
+function onDiag(s){let a=[];try{a=JSON.parse(s)}catch(x){}
+ const rows=(window._rows||[]).concat(a.map(o=>[o.n,o.ok,o.d]));
+ if(!window.DT)rows.push(['Application Android',null,'ouvre l’APK installé pour tester le réseau']);
+ const ic=v=>v===true?'✅':v===false?'❌':'⚠️';
+ $('dres').innerHTML=rows.map(r=>'<div style="margin:8px 0"><b>'+ic(r[1])+' '+esc(r[0])+'</b><br><span class="k">'+esc(r[2])+'</span></div>').join('');
+ lastReport='Light Tunnel – diagnostic\n'+rows.map(r=>ic(r[1])+' '+r[0]+' : '+r[2]).join('\n');
+ $('dsum').textContent=conclusion(rows)}
+function conclusion(rows){const bad=n=>rows.some(r=>r[0].startsWith(n)&&r[1]===false);
+ if(bad('Abonnement'))return '👉 Active d’abord un code valide.';
+ if(bad('Config serveur'))return '👉 Le code ne contient pas de serveur : demande un nouveau code à l’admin.';
+ if(bad('DNS (résolution')||bad('Internet'))return '👉 Le téléphone n’a pas internet (données ou Wi-Fi). Règle ça d’abord.';
+ if(bad('Heure'))return '👉 Active l’heure automatique du téléphone.';
+ if(bad('DNS du serveur'))return '👉 Nom du serveur introuvable : lien faux ou domaine supprimé.';
+ if(bad('Connexion au serveur'))return '👉 Le serveur ne répond pas : éteint, port bloqué ou lien incorrect.';
+ if(bad('Moteur'))return '👉 Cause principale : le moteur V2Ray n’est pas inclus dans cette version, donc aucun tunnel (ni icône 🔑). Ton réseau et ton serveur sont OK.';
+ if(bad('Tunnel'))return '👉 Le tunnel n’est pas ouvert : appuie sur Connecter, puis relance le diagnostic.';
+ return '✅ Tout semble correct.'}
+function realTunnel(){try{return window.DT?DT.vpnActive():true}catch(e){return true}}
+function checkReal(){if(on&&!realTunnel()){$('cbtn').classList.remove('on');$('st').textContent='🟠 Non protégé';$('sub').textContent='Aucun tunnel VPN actif. Ouvre Paramètres › Diagnostic'}}
+
+
+// ---- diagnostic ----
+const b64fix=x=>{x=x.replace(/-/g,'+').replace(/_/g,'/');while(x.length%4)x+='=';return x};
+const UDP=['wireguard','hysteria2','hy2','tuic'];
+function parseLink(l){l=l.trim();let m;
+ try{
+  const sch=(l.match(/^([a-z0-9]+):\/\//i)||[])[1];if(!sch)return null;const p=sch.toLowerCase();
+  if(p==='vmess'){const o=JSON.parse(dec(b64fix(l.slice(8))));return{p,h:o.add,port:+o.port}}
+  let body=l.slice(sch.length+3).split('#')[0];
+  if(p==='ss'&&body.indexOf('@')<0){body=dec(b64fix(body.split('?')[0]))}
+  m=body.match(/@(\[[^\]]+\]|[^:\/?#]+):(\d+)/);
+  if(m)return{p,h:m[1].replace(/[\[\]]/g,''),port:+m[2]};
+ }catch(e){}
+ return null}
+function parseCfg(t){const out=[];if(!t)return out;
+ const w=t.match(/Endpoint\s*=\s*(\[[^\]]+\]|[^\s:]+):(\d+)/i);
+ if(w)out.push({p:'wireguard',h:w[1].replace(/[\[\]]/g,''),port:+w[2]});
+ t.split(/\r?\n/).forEach(x=>{const r=parseLink(x);if(r&&r.h)out.push(r)});return out}
+function tcpTest(h,p){return new Promise(res=>{if(!window.DT||!DT.tcp){res({ok:null,ms:0,err:'indisponible'});return}
+ const id='tcp'+Math.random().toString(36).slice(2);window[id]=(ok,ms,err)=>{delete window[id];res({ok,ms,err})};
+ DT.tcp(h,p,id);setTimeout(()=>{if(window[id]){delete window[id];res({ok:false,ms:0,err:'délai dépassé'})}},7000)})}
+const fetchMs=async u=>{const t=performance.now();try{const c=new AbortController();const to=setTimeout(()=>c.abort(),6000);
+ await fetch(u,{mode:'no-cors',cache:'no-store',signal:c.signal});clearTimeout(to);return Math.round(performance.now()-t)}catch(x){return -1}};
+let lastRep='';
+function sendRep(){if(!lastRep){alert('Lance d’abord le diagnostic');return}wa('Rapport diagnostic Light Tunnel :\n'+lastRep)}
+async function runDiag(){
+ const box=$('dres');box.textContent='⏳ Test en cours… (10 à 20 secondes)';
+ const rep=[];const add=(ok,t,d)=>rep.push({ok,t,d});
+ let info={};try{if(window.DT&&DT.diag)info=JSON.parse(DT.diag())}catch(e){}
+ const app=!!window.DT;
+ add(null,'Appareil',(info.model||'navigateur')+' • Android '+(info.sdk||'?')+' • '+ID);
+ add(null,'Date du téléphone',new Date().toLocaleString('fr-FR'));
+ const e=+S
